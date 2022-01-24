@@ -84,3 +84,39 @@ func TestIssuerListUnmarshal(t *testing.T) {
 		})
 	}
 }
+
+func TestIsTrusted(t *testing.T) {
+	tests := map[string]struct {
+		url  string
+		want bool
+	}{
+		"trusted issuer": {
+			url:  "https://myvaccinerecord.cdph.ca.gov/creds",
+			want: true,
+		},
+		"untrusted issuer": {
+			url:  "https://mallory.me/creds",
+			want: false,
+		},
+	}
+	il := IssuerList{
+		ParticipatingIssuers: []Issuer{
+			{
+				Iss:  "https://myvaccinerecord.cdph.ca.gov/creds",
+				Name: "State of California",
+			},
+			{
+				Iss:  "https://healthcardcert.lawallet.com",
+				Name: "State of Louisiana",
+			},
+		},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			got := il.IsTrusted(tt.url)
+			if got != tt.want {
+				t.Errorf("%s: got %v, want %v", name, got, tt.want)
+			}
+		})
+	}
+}
