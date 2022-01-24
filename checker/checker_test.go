@@ -120,3 +120,12 @@ func TestIsTrusted(t *testing.T) {
 		})
 	}
 }
+
+func TestNewIssuerList(t *testing.T) {
+	t.Run("NewIssuerList", func(t *testing.T) {
+		_, err := NewIssuerList()
+		if err != nil {
+			t.Error(err)
+		}
+	})
+}
