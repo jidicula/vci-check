@@ -17,13 +17,10 @@
 package main
 
 import (
-	"encoding/xml"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 
-	"github.com/jidicula/vci-check/atom"
 	"github.com/jidicula/vci-check/checker"
 )
 
@@ -31,9 +28,6 @@ func main() {
 
 	ilCh := make(chan checker.IssuerList)
 	handleCheck := makeHandleCheck(ilCh)
-
-	latest, _ := getLatestCommit()
-	go checkLatest(latest, ilCh)
 
 	http.HandleFunc("/", handleCheck)
 	log.Fatal(http.ListenAndServe(":8090", nil))
@@ -59,7 +53,11 @@ func makeHandleCheck(ilCh <-chan checker.IssuerList) func(w http.ResponseWriter,
 			w.WriteHeader(http.StatusBadRequest)
 		}
 
-		il := <-ilCh
+		il, err := checker.NewIssuerList()
+		if err != nil {
+			http.Error(w, "Error retrieving VCI issuer list", http.StatusInternalServerError)
+			return
+		}
 		response := fmt.Sprintf(`{"message": %t}`, il.IsTrusted(issURL))
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
@@ -67,54 +65,5 @@ func makeHandleCheck(ilCh <-chan checker.IssuerList) func(w http.ResponseWriter,
 		if err != nil {
 			fmt.Printf("%s, %d bytes written", err, x)
 		}
-		fmt.Printf("done\n")
 	}
-}
-
-// checkLatest has an infinite loop to check the stored ID against latest ID.
-func checkLatest(previousLatest string, ilCh chan<- checker.IssuerList) {
-	// get issuerList on function init
-	il, err := checker.NewIssuerList()
-	if err != nil {
-		fmt.Printf("%s", err)
-	}
-	for {
-		latest, err := getLatestCommit()
-		if err != nil {
-			continue
-		}
-		if latest != previousLatest {
-			previousLatest = latest
-			// update issuerList if there's new commits
-			il, err = checker.NewIssuerList()
-			if err != nil {
-				fmt.Printf("%s", err)
-			}
-			fmt.Println(il.ParticipatingIssuers[0].Name)
-		}
-		// Always write issuerList into channel on each iteration.
-		// Blocks until ilCh is read from in handleCheck
-		ilCh <- il
-	}
-}
-
-// getLatestCommit parses the VCI commit Atom feed and returns the latest
-// commit item.
-func getLatestCommit() (string, error) {
-	a := atom.Feed{}
-
-	resp, err := http.Get("https://github.com/the-commons-project/vci-directory/commits/main.atom")
-	if err != nil {
-		return "", err
-	}
-	body, err := io.ReadAll(resp.Body)
-	resp.Body.Close()
-	if err != nil {
-		return "", err
-	}
-	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("Status not OK, %d and %s", resp.StatusCode, body)
-	}
-	err = xml.Unmarshal(body, &a)
-	return a.Entry[0].ID, err
 }
