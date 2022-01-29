@@ -20,22 +20,64 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
-	"time"
 
 	"github.com/jidicula/vci-check/atom"
 	"github.com/jidicula/vci-check/checker"
 )
 
-// TODO: put web server logic in here
 func main() {
 
+	ilCh := make(chan checker.IssuerList)
+	handleCheck := makeHandleCheck(ilCh)
+
 	latest, _ := getLatestCommit()
-	checkLatest(latest)
+	go checkLatest(latest, ilCh)
+
+	http.HandleFunc("/", handleCheck)
+	log.Fatal(http.ListenAndServe(":8090", nil))
+}
+
+func makeHandleCheck(ilCh <-chan checker.IssuerList) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		if r.Method != http.MethodGet {
+			w.Header().Set("Allow", http.MethodGet)
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+		if r.Header.Get("Accept") != "application/json" {
+			w.Header().Set("Accept", "application/json")
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		// serveraddress:port?iss=<url>
+		issURL := r.URL.Query().Get("iss")
+		if issURL == "" {
+			w.WriteHeader(http.StatusBadRequest)
+		}
+
+		il := <-ilCh
+		response := fmt.Sprintf(`{"message": %t}`, il.IsTrusted(issURL))
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		x, err := w.Write([]byte(response))
+		if err != nil {
+			fmt.Printf("%s, %d bytes written", err, x)
+		}
+		fmt.Printf("done\n")
+	}
 }
 
 // checkLatest has an infinite loop to check the stored ID against latest ID.
-func checkLatest(previousLatest string) {
+func checkLatest(previousLatest string, ilCh chan<- checker.IssuerList) {
+	// get issuerList on function init
+	il, err := checker.NewIssuerList()
+	if err != nil {
+		fmt.Printf("%s", err)
+	}
 	for {
 		latest, err := getLatestCommit()
 		if err != nil {
@@ -43,14 +85,16 @@ func checkLatest(previousLatest string) {
 		}
 		if latest != previousLatest {
 			previousLatest = latest
-			il, err := checker.NewIssuerList()
+			// update issuerList if there's new commits
+			il, err = checker.NewIssuerList()
 			if err != nil {
 				fmt.Printf("%s", err)
 			}
-			// TODO: put into channel
 			fmt.Println(il.ParticipatingIssuers[0].Name)
 		}
-		time.Sleep(5 * time.Second)
+		// Always write issuerList into channel on each iteration.
+		// Blocks until ilCh is read from in handleCheck
+		ilCh <- il
 	}
 }
 
