@@ -38,19 +38,15 @@ func makeHandleCheck(ilCh <-chan checker.IssuerList) func(w http.ResponseWriter,
 
 		if r.Method != http.MethodGet {
 			w.Header().Set("Allow", http.MethodGet)
-			w.WriteHeader(http.StatusMethodNotAllowed)
-			return
-		}
-		if r.Header.Get("Accept") != "application/json" {
-			w.Header().Set("Accept", "application/json")
-			w.WriteHeader(http.StatusBadRequest)
+			http.Error(w, "expect method GET at /?iss=<url>", http.StatusMethodNotAllowed)
 			return
 		}
 
 		// serveraddress:port?iss=<url>
 		issURL := r.URL.Query().Get("iss")
 		if issURL == "" {
-			w.WriteHeader(http.StatusBadRequest)
+			http.Error(w, "No issuer URL provided", http.StatusBadRequest)
+			return
 		}
 
 		il, err := checker.NewIssuerList()
