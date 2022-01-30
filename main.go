@@ -22,11 +22,16 @@ import (
 	"net/http"
 
 	"github.com/jidicula/vci-check/checker"
+	flag "github.com/spf13/pflag"
 )
 
 func main() {
+	port := flag.String("port", "8080", "Port to listen to")
+	flag.Parse()
+	log.Printf("listening on %s", *port)
+
 	http.HandleFunc("/", checkHandler)
-	log.Fatal(http.ListenAndServe(":8090", nil))
+	log.Fatal(http.ListenAndServe(":"+*port, nil))
 }
 
 func checkHandler(w http.ResponseWriter, r *http.Request) {
