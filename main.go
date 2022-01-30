@@ -25,11 +25,11 @@ import (
 )
 
 func main() {
-	http.HandleFunc("/", handleCheck)
+	http.HandleFunc("/", checkHandler)
 	log.Fatal(http.ListenAndServe(":8090", nil))
 }
 
-func handleCheck(w http.ResponseWriter, r *http.Request) {
+func checkHandler(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method != http.MethodGet {
 		w.Header().Set("Allow", http.MethodGet)
@@ -40,13 +40,13 @@ func handleCheck(w http.ResponseWriter, r *http.Request) {
 	// serveraddress:port?iss=<url>
 	issURL := r.URL.Query().Get("iss")
 	if issURL == "" {
-		http.Error(w, "No issuer URL provided", http.StatusBadRequest)
+		http.Error(w, `{"message": "No issuer URL provided"}`, http.StatusBadRequest)
 		return
 	}
 
 	il, err := checker.NewIssuerList()
 	if err != nil {
-		http.Error(w, "Error retrieving VCI issuer list", http.StatusInternalServerError)
+		http.Error(w, `{"message": "Error retrieving VCI issuer list"}`, http.StatusInternalServerError)
 		return
 	}
 	response := fmt.Sprintf(`{"message": %t}`, il.IsTrusted(issURL))
