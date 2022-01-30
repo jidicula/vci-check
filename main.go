@@ -32,6 +32,7 @@ func main() {
 func checkHandler(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method != http.MethodGet {
+		log.Printf("incorrect request method: %s", r.Method)
 		w.Header().Set("Allow", http.MethodGet)
 		http.Error(w, "expect method GET at /?iss=<url>", http.StatusMethodNotAllowed)
 		return
@@ -40,20 +41,24 @@ func checkHandler(w http.ResponseWriter, r *http.Request) {
 	// serveraddress:port?iss=<url>
 	issURL := r.URL.Query().Get("iss")
 	if issURL == "" {
-		http.Error(w, `{"message": "No issuer URL provided"}`, http.StatusBadRequest)
+		msg := "No issuer URL provided"
+		log.Print(msg)
+		http.Error(w, fmt.Sprintf(`{"message": "%s"}`, msg), http.StatusBadRequest)
 		return
 	}
 
 	il, err := checker.NewIssuerList()
 	if err != nil {
+		log.Print(err.Error())
 		http.Error(w, `{"message": "Error retrieving VCI issuer list"}`, http.StatusInternalServerError)
 		return
 	}
 	response := fmt.Sprintf(`{"message": %t}`, il.IsTrusted(issURL))
+	log.Printf("issURL %s : %s", issURL, response)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	x, err := w.Write([]byte(response))
 	if err != nil {
-		fmt.Printf("%s, %d bytes written", err, x)
+		log.Printf("%s, %d bytes written", err, x)
 	}
 }
