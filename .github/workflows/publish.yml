@@ -3,13 +3,43 @@ on:
     types:
       - published
 
-name: Update Go Module Index
+name: Publish
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: vci-check
 
 jobs:
   bump-index:
+    name: Update Go Module Index
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
         uses: actions/checkout@v2.4.0
       - name: Ping endpoint
-        run: curl "https://proxy.golang.org/github.com/jidicula/template-go/@v/$(git describe HEAD --tags --abbrev=0).info"
+        run: curl "https://proxy.golang.org/github.com/jidicula/vci-check/@v/${{ env.GITHUB_REF }}.info"
+  publish-image:
+    name: Publish Docker image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Log in to the Container registry
+        uses: docker/login-action@v1.12.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v3.6.2
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v2.8.0
+        with:
+          push: true
+          tags: ${{ env.REGISTRY}}/jidicula/${{ env.IMAGE_NAME}}:${{ env.GITHUB_REF }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            "UBUNTU_VERSION=${{ matrix.version-pair.ubuntu }}"
+            "CLANG_FORMAT_VERSION=${{ matrix.version-pair.version }}"
