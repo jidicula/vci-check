@@ -26,7 +26,7 @@ import (
 )
 
 func main() {
-	port := flag.String("port", "8080", "Port to listen to")
+	port := flag.String("port", "8088", "Port to listen to")
 	flag.Parse()
 	log.Printf("listening on %s", *port)
 
