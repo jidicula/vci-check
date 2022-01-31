@@ -39,7 +39,7 @@ func checkHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		log.Printf("incorrect request method: %s", r.Method)
 		w.Header().Set("Allow", http.MethodGet)
-		http.Error(w, "expect method GET at /?iss=<url>", http.StatusMethodNotAllowed)
+		http.Error(w, `{"message": "expect method GET at /?iss=<url>"}`, http.StatusMethodNotAllowed)
 		return
 	}
 
