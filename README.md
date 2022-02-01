@@ -8,6 +8,10 @@
 
 The full list of trusted issuers is available in the [VCI Directory](https://github.com/the-commons-project/vci-directory).
 
+## Deploying
+
+You can deploy it via Docker CLI with `docker run ghcr.io/jidicula/vci-check:latest`
+
 # vci-check/checker
 
 This repo also provides the Go package `checker`, containing types corresponding to the VCI directory and functions for working with them.
