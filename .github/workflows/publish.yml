@@ -17,7 +17,7 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v2.4.0
       - name: Ping endpoint
-        run: curl "https://proxy.golang.org/github.com/jidicula/vci-check/@v/${{ env.GITHUB_REF }}.info"
+        run: curl "https://proxy.golang.org/github.com/jidicula/vci-check/@v/${{ github.ref }}.info"
   publish-image:
     name: Publish Docker image
     runs-on: ubuntu-latest
