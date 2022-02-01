@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/jidicula/vci-check/checker"
 	flag "github.com/spf13/pflag"
@@ -59,7 +60,9 @@ func checkHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	response := fmt.Sprintf(`{"message": %t}`, il.IsTrusted(issURL))
-	log.Printf("issURL %s : %s", issURL, response)
+	escapedIssURL := strings.Replace(issURL, "\n", " ", -1)
+	escapedIssURL = strings.Replace(escapedIssURL, "\r", " ", -1)
+	log.Printf("issURL %s : %s", escapedIssURL, response)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	x, err := w.Write([]byte(response))
