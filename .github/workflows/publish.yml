@@ -17,7 +17,7 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v2.4.0
       - name: Ping endpoint
-        run: curl "https://proxy.golang.org/github.com/jidicula/vci-check/@v/${{ github.ref.name }}.info"
+        run: curl "https://proxy.golang.org/github.com/jidicula/vci-check/@v/${{ github.ref_name }}.info"
   publish-image:
     name: Publish Docker image
     runs-on: ubuntu-latest
@@ -38,7 +38,7 @@ jobs:
         uses: docker/build-push-action@v2.8.0
         with:
           push: true
-          tags: ${{ env.REGISTRY}}/jidicula/${{ env.IMAGE_NAME}}:${{ github.ref.name }}
+          tags: ${{ env.REGISTRY}}/jidicula/${{ env.IMAGE_NAME}}:${{ github.ref_name }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             "UBUNTU_VERSION=${{ matrix.version-pair.ubuntu }}"
