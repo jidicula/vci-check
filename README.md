@@ -10,7 +10,7 @@ The full list of trusted issuers is available in the [VCI Directory](https://git
 
 ## Deploying
 
-You can deploy it via Docker CLI with `docker run ghcr.io/jidicula/vci-check:latest`
+You can deploy it via Docker CLI with `docker run -p 8080:8080 ghcr.io/jidicula/vci-check:latest`
 
 # vci-check/checker
 
