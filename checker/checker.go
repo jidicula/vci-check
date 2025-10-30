@@ -62,7 +62,7 @@ func NewIssuerList() (IssuerList, error) {
 		return il, err
 	}
 	if resp.StatusCode != http.StatusOK {
-		return il, fmt.Errorf("Status not OK, %d and %s", resp.StatusCode, body)
+		return il, fmt.Errorf("status not OK, %d and %s", resp.StatusCode, body)
 	}
 
 	err = json.Unmarshal(body, &il)
