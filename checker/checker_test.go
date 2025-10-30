@@ -44,7 +44,7 @@ func TestIssuerUnmarshal(t *testing.T) {
 			got := Issuer{}
 			err := json.Unmarshal(tt.data, &got)
 			if err != nil {
-				t.Fatalf(err.Error())
+				t.Fatal(err.Error())
 			}
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("%s: got %v, want %v", name, got, tt.want)
@@ -91,7 +91,7 @@ func TestIssuerListUnmarshal(t *testing.T) {
 			got := IssuerList{}
 			err := json.Unmarshal(tt.data, &got)
 			if err != nil {
-				t.Fatalf(err.Error())
+				t.Fatal(err.Error())
 			}
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("%s: got %v, want %v", name, got, tt.want)
